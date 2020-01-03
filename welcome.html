@@ -4,9 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Crabtalks</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+
+        <!-- <script defer scr="script.js"></script> -->
 </head>
+<style>
+    body {
+      padding: 0;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+    }
+    #message-container {
+      width: 80%;
+      max-width: 1200px;
+    }
+    #message-container div {
+      background-color: #CCC;
+      padding: 5px;
+    }
+    #message-container div:nth-child(2n) {
+      background-color: #FFF;
+    }
+    #send-container {
+      position: fixed;
+      padding-bottom: 30px;
+      bottom: 0;
+      background-color: white;
+      max-width: 1200px;
+      width: 80%;
+      display: flex;
+    }
+    #message-input {
+      flex-grow: 1;
+    }
+</style>
 <body>
-    <h1>Welcome to Crabtalks!!</h1>
+    <div id ="message-container"></div>
+    <form id="send-container">
+        <input type="text" id="message-input">
+        <input type="file" id="imageFile" /><br/>
+        <input type="submit" id="send-button"></input>
+        
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        
+       var socket=io();
+       var $chat=$('#message-container')
+       socket.on('addimage',function(msg,base64image){
+          $chat.append(
+            $('<p>').append('<a target="_blank" href="'+base64image+'"><img src="'+base64image+'" /></a>')
+            )
+        });
+       $(function(){
+       var $messageForm=$('#send-container');
+       var $message=$('#message-input');
+       var $chat=$('#message-container')
+       var $img=$('#imageFile')
+
+       $messageForm.submit(function(e){
+         e.preventDefault();
+         socket.emit('send message',$message.val());
+        $message.val('');
+        })
+        socket.on('new message',function(data){
+          $chat.append('<div class="well">'+data.msg+'</div>')
+        })
+        
+        
+        $('#imageFile').on('change',function(e){
+          var file=e.originalEvent.target.files[0];
+          var reader=new FileReader();
+          reader.onload=function(evt){
+            socket.emit('send image',evt.target.result);
+          };
+          reader.readAsDataURL(file);
+        });
+    
+        
+    
+    });
+   
+      
+    </script>
 </body>
 </html>

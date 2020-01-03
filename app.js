@@ -2,7 +2,8 @@ const mongoose=require('mongoose');
 const bcrypt=require('bcryptjs')
 var express = require('express');
 var bodyParser=require("body-parser"); 
-var app = express();
+
+let app=require('express')();
 var LocalStrategy = require('passport-local').Strategy;
 var router = express.Router();
 var User=require('./model')
@@ -11,6 +12,19 @@ var db=mongoose.connection;
 const passport=require('passport')
 var flash=require("connect-flash");
 app.use(flash());
+
+let http=require('http').Server(app);
+let io=require('socket.io')(http);
+let fs=require('fs');
+users=[];
+connections=[];
+
+
+
+
+
+ 
+
 
 //check connection
 db.once('open',function(){
@@ -114,10 +128,35 @@ app.get('/login', passport.authenticate('login', {
 app.get('/registration',function(req,res){
     res.sendfile('registration.html');
 })
-app.get('/welcome',function(req,res){
-    res.sendfile('welcome.html');
-})
 
-app.listen(3000,()=>{
+app.get('/welcome',(req,res)=>{
+  res.sendFile(__dirname + '/welcome.html');
+})
+// app.get('/welcome',function(req,res){
+//   res.sendfile('welcome.html');
+// })
+
+io.on('connection',(socket)=>{
+  connections.push(socket);
+  console.log('connected: %s sockets connected',connections.length);
+   socket.on('disconnect',()=>{
+      connections.splice(connections.indexOf(socket),1)
+      console.log('Disconnected:%s sockets connected',connections.length);
+  })
+  //send message
+  socket.on('send message',function(data){
+      // console.log(data);
+      io.sockets.emit('new message',{msg:data})
+  });
+  socket.on('send image',function(image){
+      io.sockets.emit('addimage','',image)
+
+  })
+});
+
+// http.listen(3000,()=>{
+//   console.log('Connected')
+// })
+http.listen(3000,()=>{
     console.log('Server Running');
 })
