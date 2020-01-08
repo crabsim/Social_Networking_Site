@@ -3,7 +3,7 @@ const bcrypt=require('bcryptjs')
 var express = require('express');
 var bodyParser=require("body-parser"); 
 
-let app=require('express')();
+let app=require('express')( );
 var LocalStrategy = require('passport-local').Strategy;
 var router = express.Router();
 var User=require('./model')
@@ -90,6 +90,9 @@ var isValidPassword = function(user, password){
     return bCrypt.compareSync(password, user.password);
   }
 
+  app.use(passport.initialize());
+app.use(passport.session());
+
 app.post('/sign_up', function(req,res){ 
      
     var email =req.body.email; 
@@ -114,16 +117,20 @@ db.collection('details').insertOne(data,function(err, collection){
 }) 
 
 app.get('/',function(req,res){
-    res.sendfile('index.html');
+    res.sendFile(__dirname + '/index.html');
 })
 
-app.get('/login', passport.authenticate('login', {
-    successRedirect: '/welcome',
-    failureRedirect: '/login',
-    failureFlash : true 
-  }));
+app.get('/login',function(req,res){
+  res.sendFile(__dirname + '/index.html');
+})
   
- 
+  app.post('/login', (req, res, next) => {
+    passport.authenticate('login', {
+      successRedirect: '/welcome',
+      failureRedirect: '/login',
+      failureFlash: true
+    })(req, res, next);
+  });
 
 app.get('/registration',function(req,res){
     res.sendfile('registration.html');
